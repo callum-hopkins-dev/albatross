@@ -47,17 +47,23 @@
 //! Create a server by binding a socket address and serving a `tower::Service`.
 //! Additional connection behavior (such as TLS or redirects) can be added using acceptors.
 //!
-//! ```rust
-//! use axum::{Router, routing::get};
-//!
+//! ```rust,no_run
+//! # use axum::{Router, routing::get};
 //! #[tokio::main]
 //! async fn main() {
 //!     let router = Router::new()
 //!       .route("/", get(|| async { "Hello, world!" }));
 //!
+//! # #[cfg(all(feature = "tls", feature = "https-upgrade"))]
 //!     albatross::server("0.0.0.0:443")
 //!         .with_acceptor(albatross::tls().with_certificate("cert.pem"))
 //!         .with_https_upgrade()
+//!         .serve(router.into_make_service())
+//!         .await
+//!         .unwrap();
+//!
+//! # #[cfg(not(all(feature = "tls", feature = "https-upgrade")))]
+//!     albatross::server("0.0.0.0:443")
 //!         .serve(router.into_make_service())
 //!         .await
 //!         .unwrap();

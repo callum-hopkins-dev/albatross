@@ -11,6 +11,9 @@ documentation = "https://docs.rs/albatross"
 keywords = [ "web", "http", "https", "server", "acme" ]
 categories = [ "web-programming", "network-programming", "asynchronous" ]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [dependencies]
 bytes = { version = "1.11.1", optional = true }
 futures-core = { version = "0.3.32", optional = true }
@@ -34,3 +37,7 @@ tls = ["dep:rustls", "dep:tokio-rustls", "dep:pin-project-lite"]
 acme = ["dep:rustls", "dep:rustls-acme", "dep:pin-project-lite", "dep:futures-core", "dep:tracing"]
 systemd = ["dep:libsystemd", "dep:pin-project-lite"]
 https-upgrade = ["dep:pin-project-lite", "dep:http-body-util", "dep:bytes"]
+
+[dev-dependencies]
+axum = { version = "0.8.8", default-features = false, features = ["tokio"] }
+tokio = { version = "1.50.0", features = ["macros", "rt-multi-thread"] }

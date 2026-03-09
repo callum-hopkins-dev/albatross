@@ -1,7 +1,7 @@
 [package]
 name = "albatross"
 description = "A composable HTTP server for Tower services built around pluggable connection acceptors."
-version = "0.1.0"
+version = "0.1.1"
 authors = [ "Callum Hopkins" ]
 edition = "2024"
 license = "MIT"

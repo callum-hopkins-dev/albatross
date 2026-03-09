@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 //! # albatross
 //!
 //! A composable HTTP server for [`tower::Service`] built around pluggable connection acceptors.
@@ -71,9 +73,11 @@
 //! ```
 
 #[cfg(feature = "acme")]
+#[cfg_attr(docsrs, doc(cfg(feature = "acme")))]
 use crate::accept::acme::Acme;
 
 #[cfg(feature = "tls")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tls")))]
 use crate::accept::tls::Tls;
 
 pub use crate::{
@@ -102,6 +106,7 @@ pub const fn server<A>(socket_addr: A) -> Server<A> {
 ///
 /// The acceptor can be further configured before use.
 #[cfg(feature = "tls")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tls")))]
 #[inline]
 pub const fn tls() -> Tls {
     Tls::new()
@@ -116,6 +121,7 @@ pub const fn tls() -> Tls {
 /// The `directory` parameter should be the ACME server URL, such as the
 /// production or staging endpoint provided by your ACME provider.
 #[cfg(feature = "acme")]
+#[cfg_attr(docsrs, doc(cfg(feature = "acme")))]
 #[inline]
 pub fn acme(directory: &str) -> Acme {
     Acme::new(directory)

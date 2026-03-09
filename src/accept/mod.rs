@@ -44,15 +44,19 @@
 use std::future::Ready;
 
 #[cfg(feature = "systemd")]
+#[cfg_attr(docsrs, doc(cfg(feature = "systemd")))]
 pub mod systemd;
 
 #[cfg(feature = "tls")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tls")))]
 pub mod tls;
 
 #[cfg(feature = "acme")]
+#[cfg_attr(docsrs, doc(cfg(feature = "acme")))]
 pub mod acme;
 
 #[cfg(feature = "https-upgrade")]
+#[cfg_attr(docsrs, doc(cfg(feature = "https-upgrade")))]
 pub mod https_upgrade;
 
 /// Processes an incoming connection before it is handed to the application.

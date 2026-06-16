@@ -276,6 +276,12 @@ where
     }
 }
 
+/// Stable cache identifier.
+///
+/// `Id` is a 32-byte key used to identify values stored in an ACME
+/// cache. The built-in ACME cache adapter derives these identifiers by
+/// hashing the cached item type together with ACME-specific inputs such
+/// as the directory URL, contact addresses, and requested domains.
 #[derive(
     Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
 )]
@@ -283,16 +289,19 @@ where
 pub struct Id(#[serde(with = "const_hex::serde")] [u8; 32]);
 
 impl Id {
+    /// Creates an identifier from its raw 32-byte representation.
     #[inline]
     pub const fn from_bytes(x: [u8; 32]) -> Self {
         Self(x)
     }
 
+    /// Returns the raw 32-byte representation of this identifier.
     #[inline]
     pub const fn to_bytes(self) -> [u8; 32] {
         self.0
     }
 
+    /// Returns a reference to the raw 32-byte representation.
     #[inline]
     pub const fn as_bytes(&self) -> &[u8; 32] {
         &self.0
@@ -308,22 +317,50 @@ impl FromStr for Id {
     }
 }
 
+/// Cached ACME certificate data.
+///
+/// Values of this type contain the serialized certificate bytes provided
+/// by the underlying ACME implementation. Custom [`Cache`] implementations
+/// receive and return this type when storing certificate state.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Certificate(#[serde(with = "const_hex::serde")] Box<[u8]>);
 
+/// Cached ACME account data.
+///
+/// Values of this type contain the serialized ACME account bytes provided
+/// by the underlying ACME implementation. Custom [`Cache`] implementations
+/// receive and return this type when storing account state.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Account(#[serde(with = "const_hex::serde")] Box<[u8]>);
+
+/// Cache backend used by the ACME acceptor.
+///
+/// Implement this trait to provide custom persistence for ACME account
+/// state and issued certificates. A cache implementation may be used for
+/// both [`Certificate`] and [`Account`] values.
+///
+/// The unit type `()` implements this trait as a no-op cache.
 
 pub trait Cache<T>
 where
     Self: Send + 'static,
 {
+    /// Error returned by cache operations.
+    ///
+    /// Errors are converted into a boxed error before being passed to the
+    /// underlying ACME implementation.
     type Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>;
 
+    /// Loads a cached value by identifier.
+    ///
+    /// Returns `Ok(None)` when the cache does not contain a value for `id`.
     fn get(&self, id: Id) -> impl Future<Output = Result<Option<T>, Self::Error>> + Send;
 
+    /// Stores a value under the provided identifier.
+    ///
+    /// Existing values with the same identifier should be replaced.
     fn set(&mut self, id: Id, value: T) -> impl Future<Output = Result<(), Self::Error>> + Send;
 }
 
@@ -344,6 +381,11 @@ where
     }
 }
 
+/// Filesystem-backed ACME cache.
+///
+/// `FileCache` stores cached ACME account and certificate values in a
+/// single JSON file. The file is locked while the cache is open so that
+/// multiple processes do not write to it concurrently.
 #[derive(Debug)]
 pub struct FileCache {
     map: HashMap<Id, Value>,
@@ -353,6 +395,14 @@ pub struct FileCache {
 }
 
 impl FileCache {
+    /// Opens a filesystem-backed ACME cache.
+    ///
+    /// The cache file is created if it does not already exist. Existing
+    /// JSON cache contents are loaded when present; invalid or empty
+    /// contents are treated as an empty cache.
+    ///
+    /// An error with kind [`std::io::ErrorKind::ResourceBusy`] is returned
+    /// if the file is already locked by another process.
     pub fn open<P>(path: P) -> std::io::Result<Self>
     where
         P: AsRef<Path>,
@@ -393,9 +443,7 @@ where
 
     async fn get(&self, id: Id) -> Result<Option<T>, Self::Error> {
         match self.map.get(&id) {
-            Some(value) => Ok(Some(
-                T::deserialize(value).map_err(std::io::Error::other)?,
-            )),
+            Some(value) => Ok(Some(T::deserialize(value).map_err(std::io::Error::other)?)),
             None => Ok(None),
         }
     }

@@ -2,29 +2,39 @@
 name = "albatross"
 description = "A composable HTTP server for Tower services built around pluggable connection acceptors."
 version = "0.1.1"
-authors = [ "Callum Hopkins" ]
+authors = ["Callum Hopkins"]
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/callum-hopkins-dev/albatross"
 readme = "README.md"
 documentation = "https://docs.rs/albatross"
-keywords = [ "web", "http", "https", "server", "acme" ]
-categories = [ "web-programming", "network-programming", "asynchronous" ]
+keywords = ["web", "http", "https", "server", "acme"]
+categories = ["web-programming", "network-programming", "asynchronous"]
 
 [package.metadata.docs.rs]
 all-features = true
 
 [dependencies]
+async-trait = { version = "0.1.89", optional = true }
 bytes = { version = "1.11.1", optional = true }
+const-hex = { version = "1.19.1", features = ["serde"], optional = true }
 futures-core = { version = "0.3.32", optional = true }
 http = "1.4.0"
 http-body-util = { version = "0.1.3", optional = true }
 hyper = { version = "1.8.1", features = ["http1", "http2", "server"] }
-hyper-util = { version = "0.1.20", features = ["server-auto", "server-graceful", "service", "tokio"] }
+hyper-util = { version = "0.1.20", features = [
+  "server-auto",
+  "server-graceful",
+  "service",
+  "tokio",
+] }
 libsystemd = { version = "0.7.2", optional = true }
 pin-project-lite = { version = "0.2.17", optional = true }
 rustls = { version = "0.23.37", optional = true }
 rustls-acme = { version = "0.15.1", optional = true, features = ["tokio"] }
+serde = { version = "1.0.228", optional = true, features = ["derive"] }
+serde_json = { version = "1.0.150", default-features = false, optional = true }
+sha2 = { version = "0.11.0", default-features = false, optional = true }
 socket2 = "0.6.3"
 tokio = { version = "1.50.0", features = ["macros", "net", "rt", "sync"] }
 tokio-rustls = { version = "0.26.4", optional = true }
@@ -32,9 +42,21 @@ tower = { version = "0.5.3", features = ["make"] }
 tracing = { version = "0.1.44", optional = true }
 
 [features]
-default = []
 tls = ["dep:rustls", "dep:tokio-rustls", "dep:pin-project-lite"]
-acme = ["dep:rustls", "dep:rustls-acme", "dep:pin-project-lite", "dep:futures-core", "dep:tracing"]
+acme = [
+  "dep:rustls",
+  "dep:tokio-rustls",
+  "dep:rustls-acme",
+  "dep:pin-project-lite",
+  "dep:futures-core",
+  "dep:tracing",
+  "dep:async-trait",
+  "dep:serde",
+  "dep:const-hex",
+  "dep:sha2",
+  "dep:serde_json",
+  "tokio/fs",
+]
 systemd = ["dep:libsystemd", "dep:pin-project-lite"]
 https-upgrade = ["dep:pin-project-lite", "dep:http-body-util", "dep:bytes"]
 
